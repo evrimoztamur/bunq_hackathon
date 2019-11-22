@@ -1,5 +1,6 @@
 {% extends "components/base.html" %}
-{% set error_title %}{{ error_code }}Index{% endset %}
+{% set centered = True %}
+{% set error_title %}{{ error_code }}{% if error_message %} &ndash; {{ error_message }}{% endif %}{% endset %}
 {% set page_title %}{{ error_title }}{% endset %}
 {% set page_header %}<div class="row align-items-center">
     <div class="col">

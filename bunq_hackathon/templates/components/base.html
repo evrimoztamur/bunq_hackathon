@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+{% include "components/html_head.html" %}
+    <body>
+        <header>
+            <nav class="container">
+{{ page_header }}
+            </nav>
+        </header>
+        <main>
+            <div class="container{% if centered %} align-items-center justify-content-center d-flex{% endif %}">
+{{ page_main }}
+            </div>
+        </main>
+        <footer>
+            <nav class="container">
+{{ page_footer }}
+            </nav>
+        </footer>
+    </body>
+</html>
