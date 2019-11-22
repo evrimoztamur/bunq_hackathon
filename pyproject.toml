@@ -7,6 +7,7 @@ authors = ["Evrim Öztamur <evrim@ccount.nl>"]
 [tool.poetry.dependencies]
 python = "^3.7"
 flask = "^1.1"
+bunq_sdk = "^1.10"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"
