@@ -17,6 +17,7 @@ def create_app(test_config=None):
     app.config.from_mapping(SECRET_KEY="dev")
 
     app.jinja_env.globals["__version__"] = __version__
+    app.jinja_env.globals["__name__"] = "Hackthapp"
 
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
