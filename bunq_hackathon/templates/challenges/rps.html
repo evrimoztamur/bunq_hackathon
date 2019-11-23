@@ -1,1 +1,11 @@
-Rock Paper Scissors
+<select id="choice">
+    <option>Rock</option>
+    <option>Paper</option>
+    <option>Scissors</option>
+</select>
+<script>
+    var choiceElement = document.getElementById("choice")
+    choiceElement.addEventListener("change", function (e) {
+        window.result = choiceElement.options[choiceElement.selectedIndex].value;
+    })
+</script>

@@ -241,16 +241,20 @@ def create_app(test_config=None):
             return render_error(400, "Amount is not a number.")
 
     challenge_templates = {
-        "Rock Paper Scissors": "challenges/rps.html",
-        "Poppin'!": "challenges/poppin.html",
-        "Rollin'!": "challenges/rollin.html",
-        "Jumpin'!": "challenges/jumpin.html"
+        "Rock Paper Scissors": {"template": "challenges/rps.html", "duration": 10},
+        "Poppin'!": {"template": "challenges/poppin.html", "duration": 15},
+        "Rollin'!": {"template": "challenges/rollin.html", "duration": 15},
+        "Jumpin'!": {"template": "challenges/jumpin.html", "duration": 20},
     }
 
     @app.route("/create_challenge", methods=["GET"])
     @session_check
     def get_create_challenge(bqi):
-        return render_template("create_challenge.html", user=bqi.user, challenge_types=challenge_templates.keys())
+        return render_template(
+            "create_challenge.html",
+            user=bqi.user,
+            challenge_types=challenge_templates.keys(),
+        )
 
     @app.route("/create_challenge", methods=["POST"])
     @session_check
@@ -310,7 +314,7 @@ def create_app(test_config=None):
             elif bqi.user.id_ in challenge["participants"]:
                 if challenge["state"] == "running":
                     return redirect("/challenge/{}".format(challenge_key))
-                elif challenge["state"] == "results":
+                elif challenge["state"] == "finished":
                     return redirect("/challenge_results/{}".format(challenge_key))
 
             return render_error(403, "Challenge cannot be participated in.")
@@ -334,6 +338,7 @@ def create_app(test_config=None):
                 "full_name": "{} {}".format(bqi.user.first_name, bqi.user.last_name),
                 "participant_id": bqi.user.id_,
                 "avatar": avatar,
+                "result": None
             }
 
             return redirect("/challenge_request/{}".format(challenge_key))
@@ -371,7 +376,58 @@ def create_app(test_config=None):
             ]
 
             if bqi.user.id_ in challenge["participants"]:
-                return render_template("challenge.html", content=render_template(challenge_templates[challenge["challenge_type"]]))
+                template = challenge_templates[challenge["challenge_type"]]
+                return render_template(
+                    "challenge.html",
+                    user=bqi.user,
+                    avatar=avatar,
+                    challenge=challenge,
+                    content=render_template(template["template"]),
+                    challenge_duration=template["duration"],
+                )
+            else:
+                return redirect("/dashboard")
+        else:
+            return render_error(404, "Challenge not found.")
+    
+    
+    @app.route("/challenge_yield/<challenge_key>/<result>", methods=["GET"])
+    @session_check
+    def get_challenge_yield(bqi, challenge_key, result):
+        avatar = bqi.get_avatar()
+
+        if challenge_key in session_challenges_map:
+            challenge = session_challenges[session_challenges_map[challenge_key]][
+                challenge_key
+            ]
+
+            if bqi.user.id_ in challenge["participants"]:
+                challenge["participants"][bqi.user.id_]["result"] = result
+
+                return redirect("/challenge_results/{}".format(challenge_key))
+            else:
+                return redirect("/dashboard")
+        else:
+            return render_error(404, "Challenge not found.")
+    
+    
+    @app.route("/challenge_results/<challenge_key>", methods=["GET"])
+    @session_check
+    def get_challenge_results(bqi, challenge_key):
+        avatar = bqi.get_avatar()
+
+        if challenge_key in session_challenges_map:
+            challenge = session_challenges[session_challenges_map[challenge_key]][
+                challenge_key
+            ]
+
+            if bqi.user.id_ in challenge["participants"]:
+                return render_template(
+                    "challenge_results.html",
+                    user=bqi.user,
+                    challenge=challenge,
+                    avatar=avatar,
+                )
             else:
                 return redirect("/dashboard")
         else:

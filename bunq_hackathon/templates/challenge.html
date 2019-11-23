@@ -2,8 +2,6 @@
 {% set centered = True %}
 {% set page_title %}{{ challenge.challenge_type }} by
 {{ challenge.challenge_author }}{% endset %}
-{% set extra_tags %}
-<meta http-equiv="refresh" content="2">{% endset %}
 {% set page_header %}<div class="row align-items-center">
     <div class="col-4">
         <a href="/dashboard"><strong>{{ __name__ }}</strong></a>
@@ -16,35 +14,17 @@
 </div>{% endset %}
 {% set page_main %}<div class="row">
     <div class="col-12">
-        <h2>{{ challenge.challenge_type }}</h2>
+        <h6>{{ challenge.challenge_type  }}</h6>
     </div>
     <div class="col-12 display">
-        <h5><small>Created by</small> {{ challenge.challenge_author }}
-            <small>({{ challenge.challenge_author_id }})</small></h5>
-        {% if challenge.challenge_author_id == user.id_ %}<h6>(That's you!)</h6>
-        {% endif %}
-        <label>Created at <p>{{ challenge.created | full_datetime }}</p></label>
-        <label>Wagering<h1>{{ "€%.2f" | format(challenge.wager_amount) }}</h1></label>
-        <hr class="my-3">
-        <h5>Participants</h5>
-        <ol>{% for participant in challenge.participants %}
-            {% set participant = challenge.participants[participant] %}
-            <li><img src="{{ participant.avatar }}" width=24 height=24 class="rounded"
-                    style="vertical-align:middle;"> {{ participant.full_name }}
-                <small>{{ participant.participant_id }}</small></li>
-            {% else %}No participants (yet!){% endfor %}</ol>
-        {% if user.id_ not in challenge.participants %}
-        <hr class="my-3">
-        <div class="text-center"><a class="btn btn-success px-5 mr-3"
-                href="/join_challenge/{{ challenge.session_challenge_key }}"
-                role="button">&checkmark;</a> <a class="btn btn-danger px-5"
-                href="/dashboard" role="button">&cross;</a></div>
-        {% elif challenge.challenge_author_id == user.id_ %}<div class="text-center"><a
-                class="btn btn-success px-5 mr-3"
-                href="/join_challenge/{{ challenge.session_challenge_key }}"
-                role="button">Start challenge!</a></div>{% endif %}
+        {{ content | safe }}
     </div>
-</div>{% endset %}
+</div>
+<script>
+    setTimeout(function (e) {
+        window.location.href = "/challenge_yield/{{ challenge.session_challenge_key }}/" + window.result
+    }, {{ challenge_duration }} * 1000)
+</script>{% endset %}
 {% set page_footer %}<div class="row align-items-center">
     <div class="col-12 text-right">
         <small><strong>Version </strong> {{ __version__ }}</small>
