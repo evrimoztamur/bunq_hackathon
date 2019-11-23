@@ -356,7 +356,7 @@ def create_app(test_config=None):
             ]
 
             if bqi.user.id_ in challenge["participants"]:
-                if len(challenge["participants"].keys()) >= 2:
+                if len(challenge["participants"].keys()) >= 1:
                     challenge["state"] = "running"
 
                 return redirect("/challenge_request/{}".format(challenge_key))
