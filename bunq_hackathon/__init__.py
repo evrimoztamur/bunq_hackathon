@@ -34,7 +34,7 @@ class BunqInterface:
     _DEFAULT_COUNT = 10
 
     _POINTER_TYPE_EMAIL = "EMAIL"
-    _CURRENCY_EURL = "EUR"
+    _CURRENCY_EUR = "EUR"
 
     def __init__(self, session_key):
         self.user = None
@@ -119,10 +119,20 @@ class BunqInterface:
         BunqContext._user_context = self._user_context
 
         endpoint.RequestInquiry.create(
-            amount_inquired=Amount(amount_string, self._CURRENCY_EURL),
+            amount_inquired=Amount(amount_string, self._CURRENCY_EUR),
             counterparty_alias=Pointer(self._POINTER_TYPE_EMAIL, recipient),
             description=description,
             allow_bunqme=True,
+        )
+
+    def make_payment(self, amount_string, description, counterparty_alias):
+        BunqContext._api_context = self._api_context
+        BunqContext._user_context = self._user_context
+
+        endpoint.Payment.create(
+            amount=Amount(amount_string, self._CURRENCY_EUR),
+            counterparty_alias=counterparty_alias,
+            description=description,
         )
 
     def get_avatar(self):
@@ -242,7 +252,7 @@ def create_app(test_config=None):
             return render_error(400, "Amount is not a number.")
 
     def rps_win_processor(challenge):
-        winners = 0
+        winners = []
         pot = challenge["wager_amount"] * len(challenge["participants"].keys())
 
         for participant in challenge["participants"].values():
@@ -279,9 +289,11 @@ def create_app(test_config=None):
 
         for participant in challenge["participants"].values():
             if participant["result"] == maximum:
-                winners += 1
+                winners.append(participant)
 
-        if winners == 0:
+        winning = pot / len(winners) - challenge["wager_amount"]
+
+        if len(winners) == 0:
             for participant in challenge["participants"].values():
                 participant["winnings"] = 0
 
@@ -289,9 +301,21 @@ def create_app(test_config=None):
         else:
             for participant in challenge["participants"].values():
                 if participant["result"] == maximum:
-                    participant["winnings"] = pot / winners - challenge["wager_amount"]
+                    participant["winnings"] = winning
                 else:
                     participant["winnings"] = -challenge["wager_amount"]
+
+                    for winner in winners:
+                        print(
+                            "PAYING FROM {} TO {}".format(
+                                participant["bqi"].user.id_, winner["bqi"].user.id_
+                            )
+                        )
+                        participant["bqi"].make_payment(
+                            winning,
+                            "Won money",
+                            winner["bqi"].get_all_monetary_account_active()[0].alias[0],
+                        )
 
                 participant["result"] = participant["formatted_result"]
 
@@ -305,22 +329,37 @@ def create_app(test_config=None):
                 for participant in challenge["participants"].values()
             ]
         )
-        winners = 0
+
+        winners = []
         pot = challenge["wager_amount"] * len(challenge["participants"].keys())
 
         for participant in challenge["participants"].values():
             if participant["result"] == minimum:
-                winners += 1
+                winners.append(participant)
 
-        if winners == 0:
+        winning = pot / len(winners) - challenge["wager_amount"]
+
+        if len(winners) == 0:
             for participant in challenge["participants"].values():
                 participant["winnings"] = 0
         else:
             for participant in challenge["participants"].values():
                 if participant["result"] == minimum:
-                    participant["winnings"] = pot / winners - challenge["wager_amount"]
+                    participant["winnings"] = winning
                 else:
                     participant["winnings"] = -challenge["wager_amount"]
+
+                    for winner in winners:
+                        print(
+                            "PAYING FROM {} TO {}".format(
+                                participant["bqi"].user.id_, winner["bqi"].user.id_
+                            )
+                        )
+                        participant["bqi"].make_payment(
+                            winning,
+                            "Won money",
+                            winner["bqi"].get_all_monetary_account_active()[0].alias[0],
+                        )
 
     challenge_templates = {
         "Rock Paper Scissors": {
@@ -425,17 +464,21 @@ def create_app(test_config=None):
                 challenge_key
             ]
 
-            if not "participants" in challenge:
-                challenge["participants"] = {}
+            if float(bqi.get_all_monetary_account_active()[0].balance.value) > challenge["wager_amount"]:
+                if not "participants" in challenge:
+                    challenge["participants"] = {}
 
-            challenge["participants"][bqi.user.id_] = {
-                "full_name": "{} {}".format(bqi.user.first_name, bqi.user.last_name),
-                "participant_id": bqi.user.id_,
-                "avatar": avatar,
-                "result": None,
-            }
+                challenge["participants"][bqi.user.id_] = {
+                    "full_name": "{} {}".format(bqi.user.first_name, bqi.user.last_name),
+                    "participant_id": bqi.user.id_,
+                    "bqi": bqi,
+                    "avatar": avatar,
+                    "result": None,
+                }
 
-            return redirect("/challenge_request/{}".format(challenge_key))
+                return redirect("/challenge_request/{}".format(challenge_key))
+            else:
+                return render_error(404, "Not enough money to participate for the stake.")
         else:
             return render_error(404, "Challenge not found.")
 
