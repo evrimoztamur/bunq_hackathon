@@ -20,7 +20,7 @@ body {
 header, footer {
     background-color: #FF585D;
     color: #ffffff;
-    outline: 20px dotted #FF585D;
+    outline: 20px dashed #FF585D;
     outline-offset: -10px;
     z-index: 10;
 }

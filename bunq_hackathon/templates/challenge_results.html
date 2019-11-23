@@ -2,8 +2,8 @@
 {% set centered = True %}
 {% set page_title %}{{ challenge.challenge_type }} by
 {{ challenge.challenge_author }}{% endset %}
-{% set extra_tags %}
-<meta http-equiv="refresh" content="2">{% endset %}
+{% set extra_tags %}{% if challenge.state != "finished" %}
+<meta http-equiv="refresh" content="2">{% endif %}{% endset %}
 {% set page_header %}<div class="row align-items-center">
     <div class="col-4">
         <a href="/dashboard"><strong>{{ __name__ }}</strong></a>
@@ -19,26 +19,44 @@
         <h2><small>Results for</small> {{ challenge.challenge_type }}</h2>
     </div>
     <div class="col-12 display">
-        <h5><small>Created by</small> {{ challenge.challenge_author }}
+        <h5><small>By</small> {{ challenge.challenge_author }}
             <small>({{ challenge.challenge_author_id }})</small></h5>
-        {% if challenge.challenge_author_id == user.id_ %}<h6>(That's you!)</h6>
-        {% endif %}
         <label>Created at <p>{{ challenge.created | full_datetime }}</p></label>
-        <label>Wagering<h1>{{ "€%.2f" | format(challenge.wager_amount) }}</h1></label>
+        <label>Stakes<h1>{{ "%.2f" | format(challenge.wager_amount) }} EUR</h1></label>
         <hr class="my-3">
         <h5>Participants</h5>
         <ol>{% for participant in challenge.participants %}
             {% set participant = challenge.participants[participant] %}
             <li><img src="{{ participant.avatar }}" width=24 height=24 class="rounded"
                     style="vertical-align:middle;"> {{ participant.full_name }}
-                <small>{{ participant.participant_id }}</small>{% if participant.winnings %}{% if participant.winnings > 0 %}
-                <strong class="text-success">+{{ participant.winnings }}</strong>
+                <small>{{ participant.participant_id }}</small>{% if participant.winnings is defined %}{% if participant.winnings > 0 %}
+                <br><strong class="text-success pl-4">
+                    +{{ "%.2f" | format(participant.winnings) }}</strong> EUR
+                ({{ participant.result }})
+                {% elif participant.winnings == 0 %}
+                <br><strong class="text-info pl-4">
+                    {{ "%.2f" | format(participant.winnings) }}</strong> EUR
+                ({{ participant.result }})
                 {% else %}
-                <strong class="text-danger">{{ participant.winnings }}</strong>
+                <br><strong class="text-danger pl-4">
+                    {{ "%.2f" | format(participant.winnings) }}</strong> EUR
+                ({{ participant.result }})
                 {% endif %}
-                {% elif %}&ndash; {{ participant.result }}{% else %} is still
-                playing...{% endif %}</li>
+                {% elif participant.result %} &ndash; {{ participant.result }}{% else %}
+                is still
+                playing...{% endif %} {% if participant.participant_id == user.id_ %}<em>(That's you!)</em>{% endif %}</li>
             {% else %}No participants (yet!){% endfor %}</ol>
+        {% if challenge.challenge_author_id == user.id_ %}<div class="text-center">
+            <form method="POST" action="/create_challenge">
+                <input type="hidden" name="challenge_type"
+                    value="{{ challenge.challenge_type }}">
+                <input type="hidden" name="wager_amount"
+                    value="{{ challenge.wager_amount }}">
+                    <input type="hidden" name="forward_from"
+                        value="{{ challenge.session_challenge_key }}">
+                <button type="submit" class="btn btn-success">Go again!</button>
+            </form>
+        </div>{% endif %}
     </div>
 </div>{% endset %}
 {% set page_footer %}<div class="row align-items-center">

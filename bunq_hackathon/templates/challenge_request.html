@@ -16,22 +16,21 @@
 </div>{% endset %}
 {% set page_main %}<div class="row">
     <div class="col-12">
-        <h2>{{ challenge.challenge_type }}</h2>
+        <h3>{{ challenge.challenge_type }}</h3>
+        <h1><code>{{ challenge.session_challenge_key }}</code> <a href="#" class="btn btn-info btn-sm" id="copy_link">Copy link</a></h1>
     </div>
     <div class="col-12 display">
-        <h5><small>Created by</small> {{ challenge.challenge_author }}
+        <h5><small>By</small> {{ challenge.challenge_author }}
             <small>({{ challenge.challenge_author_id }})</small></h5>
-        {% if challenge.challenge_author_id == user.id_ %}<h6>(That's you!)</h6>
-        {% endif %}
-        <label>Created at <p>{{ challenge.created | full_datetime }}</p></label>
-        <label>Wagering<h1>{{ "€%.2f" | format(challenge.wager_amount) }}</h1></label>
+        <label>Created at<p>{{ challenge.created | full_datetime }}</p></label>
+        <label>Stakes<h1>{{ "%.2f" | format(challenge.wager_amount) }} EUR</h1></label>
         <hr class="my-3">
         <h5>Participants</h5>
         <ol>{% for participant in challenge.participants %}
             {% set participant = challenge.participants[participant] %}
             <li><img src="{{ participant.avatar }}" width=24 height=24 class="rounded"
                     style="vertical-align:middle;"> {{ participant.full_name }}
-                <small>{{ participant.participant_id }}</small></li>
+                <small>{{ participant.participant_id }} {% if participant.participant_id == user.id_ %}<em>(That's you!)</em>{% endif %}</small></li>
             {% else %}No participants (yet!){% endfor %}</ol>
         {% if user.id_ not in challenge.participants %}
         <hr class="my-3">
@@ -44,7 +43,39 @@
                 href="/start_challenge/{{ challenge.session_challenge_key }}"
                 role="button">Start challenge!</a></div>{% endif %}
     </div>
-</div>{% endset %}
+</div>
+<script>
+    document.getElementById("copy_link").addEventListener("click", function (e) {
+        copyToClipboard("{{ __url_base__ }}/challenge_request/{{ challenge.session_challenge_key }}")
+        document.getElementById("copy_link").textContent = "Copied!"
+        e.preventDefault();
+    });
+
+    function copyToClipboard(text) {
+        if (window.clipboardData && window.clipboardData.setData) {
+            // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
+            return clipboardData.setData("Text", text);
+
+        }
+        else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
+            var textarea = document.createElement("textarea");
+            textarea.textContent = text;
+            textarea.style.position = "fixed";  // Prevent scrolling to bottom of page in Microsoft Edge.
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                return document.execCommand("copy");  // Security exception may be thrown by some browsers.
+            }
+            catch (ex) {
+                console.warn("Copy to clipboard failed.", ex);
+                return false;
+            }
+            finally {
+                document.body.removeChild(textarea);
+            }
+        }
+    }
+</script>{% endset %}
 {% set page_footer %}<div class="row align-items-center">
     <div class="col-12 text-right">
         <small><strong>Version </strong> {{ __version__ }}</small>

@@ -1,4 +1,4 @@
-__version__ = "0.1.0"
+__version__ = "2.8.9a"
 __url_base__ = "http://051b6d4f.ngrok.io"
 
 import json
@@ -150,6 +150,7 @@ def create_app(test_config=None):
 
     app.jinja_env.globals["__version__"] = __version__
     app.jinja_env.globals["__name__"] = "`mgames"
+    app.jinja_env.globals["__url_base__"] = __url_base__
 
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
@@ -241,10 +242,85 @@ def create_app(test_config=None):
             return render_error(400, "Amount is not a number.")
 
     def rps_win_processor(challenge):
-        print(challenge)
+        winners = 0
+        pot = challenge["wager_amount"] * len(challenge["participants"].keys())
+
+        for participant in challenge["participants"].values():
+            participant["score"] = 0
+
+            for opponent in challenge["participants"].values():
+                if participant is not opponent:
+                    if (
+                        participant["result"] == "paper"
+                        and opponent["result"] == "rock"
+                    ):
+                        participant["score"] += 1
+                    elif (
+                        participant["result"] == "rock"
+                        and opponent["result"] == "scissors"
+                    ):
+                        participant["score"] += 1
+                    elif (
+                        participant["result"] == "scissors"
+                        and opponent["result"] == "paper"
+                    ):
+                        participant["score"] += 1
+
+            participant["formatted_result"] = "{} ({})".format(
+                participant["result"], participant["score"]
+            )
+
+        maximum = max(
+            [
+                participant["result"]
+                for participant in challenge["participants"].values()
+            ]
+        )
+
+        for participant in challenge["participants"].values():
+            if participant["result"] == maximum:
+                winners += 1
+
+        if winners == 0:
+            for participant in challenge["participants"].values():
+                participant["winnings"] = 0
+
+                participant["result"] = participant["formatted_result"]
+        else:
+            for participant in challenge["participants"].values():
+                if participant["result"] == maximum:
+                    participant["winnings"] = pot / winners - challenge["wager_amount"]
+                else:
+                    participant["winnings"] = -challenge["wager_amount"]
+
+                participant["result"] = participant["formatted_result"]
 
     def stoppin_win_processor(challenge):
-        pass
+        for participant in challenge["participants"].values():
+            participant["result"] = abs(int(participant["result"]))
+
+        minimum = min(
+            [
+                participant["result"]
+                for participant in challenge["participants"].values()
+            ]
+        )
+        winners = 0
+        pot = challenge["wager_amount"] * len(challenge["participants"].keys())
+
+        for participant in challenge["participants"].values():
+            if participant["result"] == minimum:
+                winners += 1
+
+        if winners == 0:
+            for participant in challenge["participants"].values():
+                participant["winnings"] = 0
+        else:
+            for participant in challenge["participants"].values():
+                if participant["result"] == minimum:
+                    participant["winnings"] = pot / winners - challenge["wager_amount"]
+                else:
+                    participant["winnings"] = -challenge["wager_amount"]
 
     challenge_templates = {
         "Rock Paper Scissors": {
@@ -252,7 +328,7 @@ def create_app(test_config=None):
             "duration": 10,
             "win_processor": rps_win_processor,
         },
-        "Stoppin'!": {
+        "6-Second Stoppin'!": {
             "template": "challenges/stopin.html",
             "duration": 15,
             "win_processor": stoppin_win_processor,
@@ -271,7 +347,6 @@ def create_app(test_config=None):
     @app.route("/create_challenge", methods=["POST"])
     @session_check
     def post_create_challenge(bqi):
-        print(request.form)
         if "challenge_type" in request.form and "wager_amount" in request.form:
             try:
                 wager_amount = float(request.form.get("wager_amount"))
@@ -282,8 +357,15 @@ def create_app(test_config=None):
                     return render_error(400, "Wager amount is greater than 5.")
 
                 session_key = request.cookies.get("key", None)
-                session_challenge_key = random_string(6)
+                session_challenge_key = random_id(6)
                 session_challenges_map[session_challenge_key] = session_key
+
+                if "forward_from" in request.form:
+                    forward_from = request.form.get("forward_from")
+
+                    session_challenges[session_challenges_map[forward_from]][
+                        forward_from
+                    ]["forward_to"] = session_challenge_key
 
                 if not session_key in session_challenges:
                     session_challenges[session_key] = {}
@@ -300,7 +382,7 @@ def create_app(test_config=None):
                     "state": "waiting",
                 }
 
-                return redirect("/challenge_request/{}".format(session_challenge_key))
+                return redirect("/join_challenge/{}".format(session_challenge_key))
             except ValueError:
                 return render_error(400, "Wager amount is not a number.")
         else:
@@ -388,15 +470,21 @@ def create_app(test_config=None):
             ]
 
             if bqi.user.id_ in challenge["participants"]:
-                template = challenge_templates[challenge["challenge_type"]]
-                return render_template(
-                    "challenge.html",
-                    user=bqi.user,
-                    avatar=avatar,
-                    challenge=challenge,
-                    content=render_template(template["template"]),
-                    challenge_duration=template["duration"],
-                )
+                if challenge["state"] == "running":
+                    template = challenge_templates[challenge["challenge_type"]]
+
+                    return render_template(
+                        "challenge.html",
+                        user=bqi.user,
+                        avatar=avatar,
+                        challenge=challenge,
+                        content=render_template(
+                            template["template"], challenge=challenge
+                        ),
+                        challenge_duration=template["duration"],
+                    )
+                elif challenge["state"] == "finished":
+                    return redirect("/challenge_results/{}".format(challenge_key))
             else:
                 return redirect("/dashboard")
         else:
@@ -425,6 +513,7 @@ def create_app(test_config=None):
                     challenge_templates[challenge["challenge_type"]]["win_processor"](
                         challenge
                     )
+                    challenge["state"] = "finished"
 
                 return redirect("/challenge_results/{}".format(challenge_key))
             else:
@@ -441,6 +530,9 @@ def create_app(test_config=None):
             challenge = session_challenges[session_challenges_map[challenge_key]][
                 challenge_key
             ]
+
+            if challenge.get("forward_to", None):
+                return redirect("/challenge_request/{}".format(challenge["forward_to"]))
 
             if bqi.user.id_ in challenge["participants"]:
                 return render_template(
@@ -485,3 +577,7 @@ def random_string(stringLength=20):
     letters = string.ascii_lowercase
     return "".join(random.choice(letters) for i in range(stringLength))
 
+
+def random_id(stringLength=20):
+    letters = string.digits
+    return "".join(random.choice(letters) for i in range(stringLength))

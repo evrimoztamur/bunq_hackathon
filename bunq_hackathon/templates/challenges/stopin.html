@@ -1,13 +1,10 @@
-<code><span id="timer" style="font-size: 10rem; line-height: 15rem; cursor: pointer;">00:000</span></code>
-<h1 id="message"></h1>
-
+<code class="d-block text-center"><span id="timer" style="font-size: 7rem; line-height: 15rem; cursor: pointer;">00:000</span></code>
 </h1>
 <script>
 	var TIMER_DURATION = 10000;
 	var TIMER_TARGET = 6000;
 	var timerMilliseconds;
 	var timerElement = document.getElementById("timer");
-	var messageElement = document.getElementById("message");
 
 	var timerInterval;
 	var timeRemaining;
@@ -18,15 +15,15 @@
 			timeRemaining = Math.min(TIMER_DURATION, TIMER_DURATION - timerMilliseconds + Date.now());
 
 			timerElement.textContent = leftpad(Math.floor(timeRemaining / 1000), 2) + ":" + leftpad(timeRemaining % 1000, 3);
+
+			window.result = Math.abs(TIMER_TARGET - timeRemaining);
 		}, 15)
 	});
 
 	timerElement.addEventListener("mousedown", function (e) {
-		window.result = Math.abs(TIMER_TARGET - timeRemaining);
-
-		messageElement.textContent = "You are " + window.result + " milliseconds off the mark!";
-
 		clearInterval(timerInterval);
+
+		window.location.href = "/challenge_yield/{{ challenge.session_challenge_key }}/" + window.result
 	});
 
 	function leftpad(number, length) {
