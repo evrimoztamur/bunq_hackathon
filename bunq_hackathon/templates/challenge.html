@@ -12,18 +12,27 @@
         <small>({{ user.id_ }})</small>
     </div>
 </div>{% endset %}
-{% set page_main %}<div class="row">
-    <div class="col-12">
-        <h6>{{ challenge.challenge_type  }}</h6>
+{% set page_main %}<div class="row mw-50">
+    <div class="col-12 text-center">
+        <h6>{{ challenge.challenge_type }} <span id="time_remaining" class="badge badge-primary">{{ challenge_duration }}</span></h6>
     </div>
     <div class="col-12 display">
         {{ content | safe }}
     </div>
 </div>
 <script>
+    var challenge_duration = {{ challenge_duration }};
+    var time_remaining = challenge_duration + 1;
+    var time_remaining_element = document.getElementById("time_remaining");
+
     setTimeout(function (e) {
         window.location.href = "/challenge_yield/{{ challenge.session_challenge_key }}/" + window.result
-    }, {{ challenge_duration }} * 1000)
+    }, challenge_duration * 1000)
+    setInterval(function (e) {
+        time_remaining--;
+        time_remaining = Math.max(time_remaining, 0);
+        time_remaining_element.textContent = time_remaining;
+    }, 1000)
 </script>{% endset %}
 {% set page_footer %}<div class="row align-items-center">
     <div class="col-12 text-right">
