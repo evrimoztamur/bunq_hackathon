@@ -31,8 +31,13 @@
             {% set participant = challenge.participants[participant] %}
             <li><img src="{{ participant.avatar }}" width=24 height=24 class="rounded"
                     style="vertical-align:middle;"> {{ participant.full_name }}
-                <small>{{ participant.participant_id }}</small>{% if participant.result %}:
-                {{ participant.result }}{% else %} is still playing...{% endif %}</li>
+                <small>{{ participant.participant_id }}</small>{% if participant.winnings %}{% if participant.winnings > 0 %}
+                <strong class="text-success">+{{ participant.winnings }}</strong>
+                {% else %}
+                <strong class="text-danger">{{ participant.winnings }}</strong>
+                {% endif %}
+                {% elif %}&ndash; {{ participant.result }}{% else %} is still
+                playing...{% endif %}</li>
             {% else %}No participants (yet!){% endfor %}</ol>
     </div>
 </div>{% endset %}

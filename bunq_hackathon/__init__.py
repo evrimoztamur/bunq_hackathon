@@ -240,12 +240,23 @@ def create_app(test_config=None):
         except ValueError:
             return render_error(400, "Amount is not a number.")
 
+    def rps_win_processor(challenge):
+        print(challenge)
+
+    def stoppin_win_processor(challenge):
+        pass
+
     challenge_templates = {
-        "Rock Paper Scissors": {"template": "challenges/rps.html", "duration": 10},
-        "Poppin'!": {"template": "challenges/poppin.html", "duration": 15},
-        "Rollin'!": {"template": "challenges/rollin.html", "duration": 15},
-        "Jumpin'!": {"template": "challenges/jumpin.html", "duration": 20},
-        "Stoppin'!": {"template": "challenges/stopin.html", "duration": 15},
+        "Rock Paper Scissors": {
+            "template": "challenges/rps.html",
+            "duration": 10,
+            "win_processor": rps_win_processor,
+        },
+        "Stoppin'!": {
+            "template": "challenges/stopin.html",
+            "duration": 15,
+            "win_processor": stoppin_win_processor,
+        },
     }
 
     @app.route("/create_challenge", methods=["GET"])
@@ -339,7 +350,7 @@ def create_app(test_config=None):
                 "full_name": "{} {}".format(bqi.user.first_name, bqi.user.last_name),
                 "participant_id": bqi.user.id_,
                 "avatar": avatar,
-                "result": None
+                "result": None,
             }
 
             return redirect("/challenge_request/{}".format(challenge_key))
@@ -390,8 +401,7 @@ def create_app(test_config=None):
                 return redirect("/dashboard")
         else:
             return render_error(404, "Challenge not found.")
-    
-    
+
     @app.route("/challenge_yield/<challenge_key>/<result>", methods=["GET"])
     @session_check
     def get_challenge_yield(bqi, challenge_key, result):
@@ -403,15 +413,25 @@ def create_app(test_config=None):
             ]
 
             if bqi.user.id_ in challenge["participants"]:
-                challenge["participants"][bqi.user.id_]["result"] = result
+                if not challenge["participants"][bqi.user.id_]["result"]:
+                    challenge["participants"][bqi.user.id_]["result"] = result
+
+                if all(
+                    [
+                        challenge["participants"][participant]["result"]
+                        for participant in challenge["participants"]
+                    ]
+                ):
+                    challenge_templates[challenge["challenge_type"]]["win_processor"](
+                        challenge
+                    )
 
                 return redirect("/challenge_results/{}".format(challenge_key))
             else:
                 return redirect("/dashboard")
         else:
             return render_error(404, "Challenge not found.")
-    
-    
+
     @app.route("/challenge_results/<challenge_key>", methods=["GET"])
     @session_check
     def get_challenge_results(bqi, challenge_key):
