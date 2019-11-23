@@ -245,6 +245,7 @@ def create_app(test_config=None):
         "Poppin'!": {"template": "challenges/poppin.html", "duration": 15},
         "Rollin'!": {"template": "challenges/rollin.html", "duration": 15},
         "Jumpin'!": {"template": "challenges/jumpin.html", "duration": 20},
+        "Stoppin'!": {"template": "challenges/stopin.html", "duration": 15},
     }
 
     @app.route("/create_challenge", methods=["GET"])
