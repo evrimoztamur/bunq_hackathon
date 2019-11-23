@@ -478,7 +478,7 @@ def create_app(test_config=None):
 
                 return redirect("/challenge_request/{}".format(challenge_key))
             else:
-                return render_error(404, "Not enough money to participate for the stake.")
+                return render_error(400, "Not enough money to participate for the stake.")
         else:
             return render_error(404, "Challenge not found.")
 
