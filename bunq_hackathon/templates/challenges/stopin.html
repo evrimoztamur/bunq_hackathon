@@ -1,5 +1,5 @@
 <code><span id="timer" style="font-size: 10rem; line-height: 15rem; cursor: pointer;">00:000</span></code>
-<h1>You are <code><span id="timer" style="font-size: 10rem; line-height: 15rem; cursor: pointer;">00:000</span></code>
+<h1 id="message"></h1>
 
 </h1>
 <script>
@@ -7,6 +7,7 @@
 	var TIMER_TARGET = 6000;
 	var timerMilliseconds;
 	var timerElement = document.getElementById("timer");
+	var messageElement = document.getElementById("message");
 
 	var timerInterval;
 	var timeRemaining;
@@ -22,6 +23,8 @@
 
 	timerElement.addEventListener("mousedown", function (e) {
 		window.result = Math.abs(TIMER_TARGET - timeRemaining);
+
+		messageElement.textContent = "You are " + window.result + " milliseconds off the mark!";
 
 		clearInterval(timerInterval);
 	});
