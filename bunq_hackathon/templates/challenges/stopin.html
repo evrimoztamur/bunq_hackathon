@@ -1,0 +1,38 @@
+<code><span id="timer" style="font-size: 10rem; line-height: 15rem; cursor: pointer;">00:000</span></code>
+<h1>You are <code><span id="timer" style="font-size: 10rem; line-height: 15rem; cursor: pointer;">00:000</span></code>
+
+</h1>
+<script>
+	var TIMER_DURATION = 10000;
+	var TIMER_TARGET = 6000;
+	var timerMilliseconds;
+	var timerElement = document.getElementById("timer");
+
+	var timerInterval;
+	var timeRemaining;
+
+	window.addEventListener("load", function (e) {
+		timerMilliseconds = Date.now() + TIMER_DURATION;
+		timerInterval = setInterval(function (e) {
+			timeRemaining = Math.min(TIMER_DURATION, TIMER_DURATION - timerMilliseconds + Date.now());
+
+			timerElement.textContent = leftpad(Math.floor(timeRemaining / 1000), 2) + ":" + leftpad(timeRemaining % 1000, 3);
+		}, 15)
+	});
+
+	timerElement.addEventListener("mousedown", function (e) {
+		window.result = Math.abs(TIMER_TARGET - timeRemaining);
+
+		clearInterval(timerInterval);
+	});
+
+	function leftpad(number, length) {
+		number = "" + number;
+
+		while (number.length < length) {
+			number = '0' + number;
+		}
+
+		return number;
+	}
+</script>
