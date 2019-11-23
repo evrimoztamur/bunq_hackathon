@@ -1,11 +1,30 @@
-<select id="choice">
-    <option>Rock</option>
-    <option>Paper</option>
-    <option>Scissors</option>
-</select>
+<div class="text-center">
+    <a class="btn btn-info m-2" href="#" style="font-size: 5rem; line-height: 8rem; width: 8rem; height: 8rem;" id="rock-select">✊</a>
+    <a class="btn btn-light m-2" href="#" style="font-size: 5rem; line-height: 8rem; width: 8rem; height: 8rem;" id="paper-select">✋</a>
+    <a class="btn btn-light m-2" href="#" style="font-size: 5rem; line-height: 8rem; width: 8rem; height: 8rem;" id="scissors-select">✌️</a>
+</div>
 <script>
-    var choiceElement = document.getElementById("choice")
-    choiceElement.addEventListener("change", function (e) {
-        window.result = choiceElement.options[choiceElement.selectedIndex].value;
-    })
+    var currentChoice = "rock";
+
+    function select_choice(choice) {
+        var oldChoice = currentChoice;
+        currentChoice = choice;
+
+        window.result = choice;
+
+        document.getElementById(oldChoice + "-select").classList.replace("btn-info", "btn-light");
+        document.getElementById(currentChoice + "-select").classList.replace("btn-light", "btn-info");
+    }
+
+    document.getElementById("rock-select").addEventListener("mousedown", function (e) {
+        select_choice("rock");
+    });
+
+    document.getElementById("paper-select").addEventListener("mousedown", function (e) {
+        select_choice("paper");
+    });
+
+    document.getElementById("scissors-select").addEventListener("mousedown", function (e) {
+        select_choice("scissors");
+    });
 </script>
