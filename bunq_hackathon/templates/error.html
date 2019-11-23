@@ -3,7 +3,7 @@
 {% set error_title %}{{ error_code }}{% if error_message %} &ndash; {{ error_message }}{% endif %}{% endset %}
 {% set page_title %}{{ error_title }}{% endset %}
 {% set page_header %}<div class="row align-items-center">
-    <div class="col">
+    <div class="col-12">
         <a href="/"><strong>{{ __name__ }}</strong></a>
     </div>
 </div>{% endset %}
@@ -14,8 +14,7 @@
     </div>
 </div>{% endset %}
 {% set page_footer %}<div class="row align-items-center">
-    <div class="col-10"></div>
-    <div class="col-2 text-right">
+    <div class="col-12 text-right">
         <small><strong>Version </strong> {{ __version__ }}</small>
     </div>
 </div>{% endset %}

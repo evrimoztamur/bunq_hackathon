@@ -1,8 +1,9 @@
 html {
-    background-color: #352C34;
+    background-color: #FF585D;
 }
 
 body {
+    background-color: #FF585D;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -17,8 +18,11 @@ body {
 }
 
 header, footer {
-    background-color: #7D2248;
+    background-color: #FF585D;
     color: #ffffff;
+    outline: 20px dotted #FF585D;
+    outline-offset: -10px;
+    z-index: 10;
 }
 
 header nav, footer nav {
@@ -27,6 +31,7 @@ header nav, footer nav {
 }
 
 main {
+    background-color: #352C34;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -58,59 +63,6 @@ nav ul li {
 
 label {
     display: block;
-}
-
-input {
-    display: block;
-    width: 100%;
-    border-radius: 0.125rem;
-    border: 1px solid #aaaaaa;
-    color: inherit;
-    padding: 0 0.25rem;
-    line-height: 1.5rem;
-}
-
-select {
-    display: block;
-    width: 100%;
-    border-radius: 0.125rem;
-    border: 1px solid #aaaaaa;
-    color: inherit;
-    appearance: none;
-    -moz-appearance: none;
-    -webkit-appearance: none;
-    cursor: pointer;
-    border-left-width: 0.25rem;
-}
-
-option {
-    padding: 0;
-}
-
-input[type="button"] {
-    display: inline-block;
-    width: auto;
-    padding: 0 1.5rem;
-}
-
-input[type="button"]:hover {
-    background-color: #aaaaaa;
-    color: #ffffff;
-}
-
-input[type="button"]:focus {
-    background-color: #cccccc;
-}
-
-input:focus, select:focus {
-    border-color: #0056B3;
-    outline: none;
-}
-
-nav input {
-    border: none;
-    padding: 0.125rem 0.75rem;
-    color: #333333;
 }
 
 nav a {

@@ -1,0 +1,51 @@
+{% extends "components/base.html" %}
+{% set page_title %}Dashboard{% endset %}
+{% set page_header %}<div class="row align-items-center">
+    <div class="col-4">
+        <a href="/dashboard"><strong>{{ __name__ }}</strong></a>
+    </div>
+    <div class="col-8 text-right">
+        <img src="{{ avatar }}" width=24 height=24 class="rounded" style="vertical-align:middle;"> {{ user.first_name }} {{ user.last_name }} <small>({{ user.id_ }})</small>
+    </div>
+</div>{% endset %}
+{% set page_main %}<div class="row">
+    <div class="col-12">
+        <h1>Challenges</h1>
+        <a href="/create_challenge" class="btn btn-success m-1 d-block">&plus; New challenge</a>
+    </div>
+    {% for challenge in challenges %}
+    <div class="col-12 display">
+        {% set challenge = challenges[challenge] %}
+        <h5><small>Created by</small> {{ challenge.challenge_author }}</h5>
+        <label>Type:<p>{{ challenge.challenge_type }}</p></label>
+        <label>Created:<p>{{ challenge.created | full_datetime }}</p></label>
+        <label>Wager:<p>{{ challenge.wager_amount }}</p></label>
+        <label>Link:<p>
+                <code><a href="/challenge_request/{{ challenge.session_challenge_key }}" style="text-transform: uppercase;">{{ challenge.session_challenge_key }}</a></code>
+            </p></label>
+    </div>
+    {% endfor %}
+    <div class="col-12">
+        <hr>
+        <h1>Accounts</h1>
+    </div>
+    {% for account in monetary_accounts %}
+    <div class="col-12 display">
+        <h3>{{ account.description }}</h3>
+        <label>ID:<p>{{ account.id_ }}</p></label>
+        <label>Created:<p>{{ account.created | full_datetime }}</p></label>
+        <label>Balance:<p>{{ account.balance.value }} {{ account.balance.currency }}
+            </p></label>
+        <hr>
+        <a href="/get_money/10" class="btn btn-outline-primary m-1">Ask daddy for
+            money</a>
+        <a href="/get_money/500" class="btn btn-outline-success m-1">Ask daddy for <em>a
+                lot of</em> money</a>
+    </div>
+    {% endfor %}
+</div>{% endset %}
+{% set page_footer %}<div class="row align-items-center">
+    <div class="col-12 text-right">
+        <small><strong>Version </strong> {{ __version__ }}</small>
+    </div>
+</div>{% endset %}
