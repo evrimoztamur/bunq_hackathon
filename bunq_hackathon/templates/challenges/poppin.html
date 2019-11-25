@@ -1,1 +1,118 @@
-Poppin'
+<div class="text-center">
+    <canvas width=600 height=600 style="max-width: 100%; max-height: 100%" id="canvas"
+        class="rounded border border-primary"></canvas>
+</div>
+<script>
+    var canvasElement = document.getElementById("canvas");
+    var ctx = canvasElement.getContext("2d");
+
+    window.result = 0;
+
+    function getMousePos(canvas, evt) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+            x: (evt.clientX - rect.left) / (rect.right - rect.left) * canvas.width,
+            y: (evt.clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
+        };
+    }
+
+    var bubbles = [];
+
+    function pushBubble(x, y, r, color, vx, vy) {
+        bubbles.push({ x: x, y: y, r: r, color: color, vx: vx, vy: vy });
+    }
+
+    canvasElement.addEventListener("mousedown", function (e) {
+        pop(e);
+    });
+
+    canvasElement.addEventListener("touchstart", function (e) {
+        pop(e);
+    });
+
+    canvasElement.addEventListener("touchend", function (e) {
+        pop(e);
+    });
+
+    function pop(e) {
+        var position = getMousePos(canvasElement, e);
+
+        for (var i = 0; i < window.bubbles.length; i++) {
+            var bubble = window.bubbles[i];
+
+            if (Math.hypot(position.x - bubble.x, position.y - bubble.y) < bubble.r) {
+                window.result++;
+
+                bubble.y = -100;
+            }
+        }
+    }
+
+    if (!Math.hypot) Math.hypot = function () {
+        var y = 0, i = arguments.length;
+        while (i--) y += arguments[i] * arguments[i];
+        return Math.sqrt(y);
+    };
+
+    window.requestAnimationFrame(drawFrame);
+
+    function randomRgbaString() {
+        let h = Math.floor(Math.random() * 360);
+        let s = 80 + Math.floor(Math.random() * 20);
+        let l = 40 + Math.floor(Math.random() * 50);
+        let a = 0.8;
+        return `hsla(${h},${s}%,${l}%,${a})`
+    }
+
+
+    function drawFrame() {
+        var time = Date.now();
+
+        clearContext();
+
+        if (Math.random() < 0.17) {
+            pushBubble(Math.random() * 600, 680, 30 + Math.random() * 40, randomRgbaString(), -0.5 + Math.random(), -3 - Math.random() * 2);
+        }
+
+        for (var i = 0; i < window.bubbles.length; i++) {
+            var bubble = window.bubbles[i];
+
+            drawBubble(bubble.x, bubble.y, bubble.r, bubble.color);
+
+            bubble.vx += Math.sin(time / 1000) * 0.01;
+
+            bubble.x += bubble.vx;
+            bubble.y += bubble.vy;
+        }
+
+        bubbles.removeIf(clearCond);
+
+        window.requestAnimationFrame(drawFrame);
+    }
+
+    Array.prototype.removeIf = function (callback) {
+        var i = this.length;
+        while (i--) {
+            if (callback(this[i], i)) {
+                this.splice(i, 1);
+            }
+        }
+    };
+
+    function clearCond(x, i) {
+        return x.y < -90;
+    }
+
+    function clearContext() {
+        ctx.clearRect(0, 0, 600, 600);
+    }
+
+    function drawBubble(x, y, r, color) {
+        var oldfill = ctx.fillStyle;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.fillStyle = oldfill;
+    }
+</script>

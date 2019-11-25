@@ -1,4 +1,5 @@
-<code class="d-block text-center"><span id="timer" style="font-size: 7rem; line-height: 15rem; cursor: pointer;">00:000</span></code>
+<code
+	class="d-block text-center"><span id="timer" style="font-size: 6rem; line-height: 15rem; cursor: pointer;">00:000</span></code>
 </h1>
 <script>
 	var TIMER_DURATION = 10000;
@@ -21,6 +22,12 @@
 	});
 
 	timerElement.addEventListener("mousedown", function (e) {
+		clearInterval(timerInterval);
+
+		window.location.href = "/challenge_yield/{{ challenge.session_challenge_key }}/" + window.result
+	});
+
+	timerElement.addEventListener("touchstart", function (e) {
 		clearInterval(timerInterval);
 
 		window.location.href = "/challenge_yield/{{ challenge.session_challenge_key }}/" + window.result

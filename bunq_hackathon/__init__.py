@@ -1,5 +1,5 @@
 __version__ = "2.8.9a"
-__url_base__ = "http://051b6d4f.ngrok.io"
+__url_base__ = "http://9aa0a3da.ngrok.io"
 
 import json
 import os
@@ -361,15 +361,62 @@ def create_app(test_config=None):
                             winner["bqi"].get_all_monetary_account_active()[0].alias[0],
                         )
 
+    def poppin_win_processor(challenge):
+        for participant in challenge["participants"].values():
+            participant["result"] = abs(int(participant["result"]))
+
+        maximum = max(
+            [
+                participant["result"]
+                for participant in challenge["participants"].values()
+            ]
+        )
+
+        winners = []
+        pot = challenge["wager_amount"] * len(challenge["participants"].keys())
+
+        for participant in challenge["participants"].values():
+            if participant["result"] == maximum:
+                winners.append(participant)
+
+        winning = pot / len(winners) - challenge["wager_amount"]
+
+        if len(winners) == 0:
+            for participant in challenge["participants"].values():
+                participant["winnings"] = 0
+        else:
+            for participant in challenge["participants"].values():
+                if participant["result"] == maximum:
+                    participant["winnings"] = winning
+                else:
+                    participant["winnings"] = -challenge["wager_amount"]
+
+                    for winner in winners:
+                        print(
+                            "PAYING FROM {} TO {}".format(
+                                participant["bqi"].user.id_, winner["bqi"].user.id_
+                            )
+                        )
+                        participant["bqi"].make_payment(
+                            winning,
+                            "Won money",
+                            winner["bqi"].get_all_monetary_account_active()[0].alias[0],
+                        )
+
     challenge_templates = {
         "Rock Paper Scissors": {
             "template": "challenges/rps.html",
             "duration": 10,
             "win_processor": rps_win_processor,
         },
+        "Bubble Poppin'!": {
+            "template": "challenges/poppin.html",
+            "duration": 15,
+            "win_processor": poppin_win_processor,
+        },
         "6-Second Stoppin'!": {
             "template": "challenges/stopin.html",
-            "duration": 15,
+            "duration": 12,
             "win_processor": stoppin_win_processor,
         },
     }
@@ -464,12 +511,17 @@ def create_app(test_config=None):
                 challenge_key
             ]
 
-            if float(bqi.get_all_monetary_account_active()[0].balance.value) > challenge["wager_amount"]:
+            if (
+                float(bqi.get_all_monetary_account_active()[0].balance.value)
+                > challenge["wager_amount"]
+            ):
                 if not "participants" in challenge:
                     challenge["participants"] = {}
 
                 challenge["participants"][bqi.user.id_] = {
-                    "full_name": "{} {}".format(bqi.user.first_name, bqi.user.last_name),
+                    "full_name": "{} {}".format(
+                        bqi.user.first_name, bqi.user.last_name
+                    ),
                     "participant_id": bqi.user.id_,
                     "bqi": bqi,
                     "avatar": avatar,
@@ -478,7 +530,9 @@ def create_app(test_config=None):
 
                 return redirect("/challenge_request/{}".format(challenge_key))
             else:
-                return render_error(400, "Not enough money to participate for the stake.")
+                return render_error(
+                    400, "Not enough money to participate for the stake."
+                )
         else:
             return render_error(404, "Challenge not found.")
 
